@@ -1,78 +1,130 @@
-/*! sir-trevor-gmaps-block 2015-06-05 */
-/* global define:true module:true window: true */
-(function(global, factory) {
-    if (typeof define === 'function' && define['amd']) {
-        define(['sir-trevor-js', 'jquery'], factory);
-    } else if (typeof module !== 'undefined' && module['exports']) {
-        var SirTrevor = require('sir-trevor-js');
-        var jQuery = require('jquery');
-        module['exports'] = factory(SirTrevor, jQuery);
-    } else if (typeof this !== 'undefined') {
-        global.SirTrevor.Blocks.Columns = factory(global.SirTrevor, global.jQuery);
-    }
-})(typeof window !== 'undefined' ? window : this, function factory(SirTrevor, $) {
-	"use strict";
-    /*
-     Columns Layout Block
-     */
-	 return SirTrevor.Blocks.Maps = SirTrevor.Block.extend({
-		providers: {
-			googlemaps: {
-				//regex: /(?:http[s]?:\/\/)?(?:www.)?vimeo.com\/(.+)/,
-				regex: /<iframe.*? src='(?:http[s]?:\/\/)?(?:www)?google.com\/maps\/embed(.*?)'/,
-				html: "<iframe src=\"<%= protocol %>//www.google.com/maps/embed<%= remote_id %>\" width=\"580\" height=\"320\" frameborder=\"0\" style=\"border\:0\"><\/iframe>"
-				//html: "<iframe src=\"<%= protocol %>//player.vimeo.com/video/<%= remote_id %>?title=0&byline=0\" width=\"580\" height=\"320\" frameborder=\"0\"></iframe>"
-			}
+SirTrevor.Blocks.Iframe = (function() {
+
+	return SirTrevor.Block.extend({
+
+        type : 'iframe',
+
+		icon_name : 'iframe',
+
+		title : function() {
+			return "Iframe";
 		},
-		type: 'maps',
-		title: function() { return i18n.t('blocks:maps:title')|| 'Maps';},
-		icon_name: 'iframe',
-		
-		droppable: true,
-        pastable: true,
-	  
-		
-		loadData: function(data){
-			if (!this.providers.hasOwnProperty(data.source)) { return; }
 
-			var source = this.providers[data.source];
+		toolbarEnabled : true,
 
-			var protocol = window.location.protocol === "file:" ? 
-				"http:" : window.location.protocol;
+		droppable : false,
 
-			this.$editor
-			.addClass('st-block__editor--with-sixteen-by-nine-media')
-			.html(_.template(source.html, {
-				protocol: protocol,
-				remote_id: data.remote_id
-			}));
+		pastable : true,
+
+		paste_options : {
+			html : '<input type="text" placeholder="<iframe>" class="st-block__paste-input st-paste-block">'
 		},
-		onContentPasted: function(event){
-			this.handleDropPaste(event.target.value);
+
+		onContentPasted : function(event) {
+			this.loading();
+
+			obj = {};
+
+			val = $(event.target).val();
+
+            iframeObj = $.parseHTML(val);
+            
+            $.each(iframeObj, function(i, el)
+            {
+                if(el.nodeName=='IFRAME')
+                {
+                    if(el.attributes.src.value){
+                        obj.src = el.attributes.src.value
+                        if(el.attributes.width)
+                        {
+                            obj.width = el.attributes.width.value
+                        }
+                        if(el.attributes.height)
+                        {
+                            obj.height = el.attributes.height.value
+                        }
+                        if(el.attributes.style)
+                        {
+                            obj.style = el.attributes.style.value
+                        }
+                        if(el.attributes.sandbox)
+                        {
+                            obj.sandbox = el.attributes.sandbox.value
+                        }
+                        if(el.attributes.seamless)
+                        {
+                            obj.seamless = el.attributes.seamless
+                        }
+                        if(el.attributes.lang)
+                        {
+                            obj.lang = el.attributes.lang.value
+                        }
+                        if(el.attributes.title)
+                        {
+                            obj.title = el.attributes.title.value
+                        }
+                        if(el.attributes.frameborder)
+                        {
+                            obj.frameborder = el.attributes.frameborder.value
+                        }
+                    }
+                }
+			});
+
+            if(obj)
+            {
+                this.setAndLoadData(obj);
+            }
 		},
-		matchMapProvider: function(provider, index, url) {
-			var match = provider.regex.exec(url);
-			if(match == null || _.isUndefined(match[1])) { return {}; }
 
-			return {
-				source: index,
-				remote_id: match[1]
-			};
+		uploadable : false,
+
+		formattable : false,
+
+		loadData : function(data) {
+			data.width = (typeof data.width == undefined || !data.width) ? '100%' : data.width;
+			data.height = (typeof data.height == undefined || !data.height) ? '100%' : data.height;
+            data.style = (typeof data.style == undefined || !data.style) ? '' : data.style;
+            data.frameborder = (typeof data.frameborder == undefined || !data.frameborder) ? '0' : data.frameborder;
+            
+			this.$inner.prepend(
+				$('<iframe>')
+					.attr('src', data.src)
+					.attr('class', 'st-block-embed')
+					.attr('width', data.width)
+					.attr('height', data.height)
+                    .attr('frameborder', data.frameborder)
+			);
+            if(typeof data.style != undefined){
+                $('<iframe>')
+					.attr('style', data.style)
+            }
+            if(typeof data.sandbox != undefined)
+            {
+                $('<iframe>')
+                    .attr('sandbox', data.sandbox)
+            }
+            if(typeof data.seamless != undefined)
+            {
+                $('<iframe>')
+                    .attr('seamless')
+            }
+            if(typeof data.lang != undefined)
+            {
+                $('<iframe>')
+                    .attr('lang', data.lang)
+            }
+            if(typeof data.title != undefined)
+            {
+                $('<iframe>')
+                    .attr('title', data.title)
+            }
+            
+
+            this.$inner.addClass('text-center');
+
+			this.ready();
 		},
-		handleDropPaste: function(url){
-		if (!utils.isURI(url)) { return; }
+	});
 
-			for(var key in this.providers) { 
-				if (!this.providers.hasOwnProperty(key)) { continue; }
-				this.setAndLoadData(
-					this.matchMapProvider(this.providers[key], key, url)
-				);
-			}
-		  },
-		onDrop: function(transferData){
-			var url = transferData.getData('text/plain');
-			this.handleDropPaste(url);
-		}
-	 });
-});
-
+})();
