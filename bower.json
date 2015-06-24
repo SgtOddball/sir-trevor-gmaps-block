@@ -1,0 +1,10 @@
+{
+  "name": "sir-trevor-gmaps-block",
+  "main": [
+    "sir-trevor-gmaps-block.js",
+  ],
+  "version": "0.0.1",
+  "dependencies": {
+    "sir-trevor-js": "*"
+  }
+}
