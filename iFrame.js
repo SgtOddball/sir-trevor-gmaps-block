@@ -68,35 +68,31 @@ SirTrevor.Blocks.Iframe = (function() {
             data.style = (typeof data.style == undefined || !data.style) ? 'pointer-events:none' : 'pointer-events:none;'+data.style;
             data.frameborder = (typeof data.frameborder == undefined || !data.frameborder) ? '0' : data.frameborder;
             
-			this.$inner.prepend(
-				$('<iframe>')
+			
+			iframeObj = $('<iframe>')
 					.attr('src', data.src)
 					.attr('class', 'st-block-embed')
 					.attr('width', data.width)
 					.attr('height', data.height)
-                    .attr('frameborder', data.frameborder)
-			);
+                    .attr('frameborder', data.frameborder);
+			
             if(typeof data.style != undefined){
-                $('<iframe>')
-					.attr('style', data.style)
+                iframeObj.attr('style', data.style)
             }
             if(typeof data.sandbox != undefined)
             {
-                $('<iframe>')
-                    .attr('sandbox', data.sandbox)
+                iframeObj.attr('sandbox', data.sandbox)
             }
             if(typeof data.lang != undefined)
             {
-                $('<iframe>')
-                    .attr('lang', data.lang)
+                iframeObj.attr('lang', data.lang)
             }
             if(typeof data.title != undefined)
             {
-                $('<iframe>')
-                    .attr('title', data.title)
+                iframeObj.attr('title', data.title)
             }
             
-
+			this.$inner.prepend(iframeObj);
             this.$inner.addClass('text-center');
 
 			this.ready();
